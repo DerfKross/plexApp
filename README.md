@@ -136,6 +136,19 @@ MOVIE_SAVE_PATH=D:\Media\Movies
 TV_SAVE_PATH=D:\Media\TV Shows
 ```
 
+For mapped network drives such as `T:\`, use the UNC path instead of the drive letter:
+
+```env
+MOVIE_SAVE_PATH=\\SERVER\Share\Movies
+TV_SAVE_PATH=\\SERVER\Share\TV Shows
+```
+
+To convert mapped paths in `.env` automatically on the Windows server:
+
+```powershell
+.\scripts\convert-mapped-paths.ps1
+```
+
 When a user adds a TV show, PlexApp lists the existing folders inside `TV_SAVE_PATH`. The user can choose one of those folders or type a new show name; PlexApp creates the folder and sends that folder as qBittorrent's save path.
 
 ## Connection Check

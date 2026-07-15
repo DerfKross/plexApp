@@ -47,5 +47,14 @@ if (Test-Path ".env") {
     } else {
       Write-Host "$name NOT FOUND: $value"
     }
+
+    if ($value -match "^([A-Za-z]):") {
+      $drive = "$($matches[1].ToUpper()):"
+      $disk = Get-CimInstance Win32_LogicalDisk -Filter "DeviceID='$drive'" -ErrorAction SilentlyContinue
+      if ($disk.ProviderName) {
+        Write-Host "  $drive maps to $($disk.ProviderName)"
+        Write-Host "  Recommended: run .\scripts\convert-mapped-paths.ps1"
+      }
+    }
   }
 }
