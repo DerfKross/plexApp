@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PlexApp</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div>
+          <h1>PlexApp</h1>
+          <p>Search approved sources, send downloads to qBittorrent, and scan Plex.</p>
+        </div>
+        <button id="refreshButton" class="icon-button" title="Refresh download progress" aria-label="Refresh download progress">
+          <span aria-hidden="true">↻</span>
+        </button>
+      </header>
+
+      <section class="control-band">
+        <form id="searchForm" class="search-form">
+          <div class="segmented" role="group" aria-label="Media type">
+            <label>
+              <input type="radio" name="mediaType" value="movie" checked />
+              <span>Movie</span>
+            </label>
+            <label>
+              <input type="radio" name="mediaType" value="tv" />
+              <span>TV Show</span>
+            </label>
+          </div>
+          <div class="search-row">
+            <input id="queryInput" type="search" placeholder="Search title" autocomplete="off" />
+            <button type="submit">Search</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="manual-band">
+        <form id="directForm" class="direct-form">
+          <input id="directInput" type="text" placeholder="Paste legal magnet or torrent URL" />
+          <button type="submit">Add URL</button>
+        </form>
+      </section>
+
+      <section class="content-grid">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Results</h2>
+            <span id="sourceStatus"></span>
+          </div>
+          <div id="resultsList" class="list empty">Run a search to see available torrents.</div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Downloads</h2>
+            <div class="scan-actions">
+              <button id="scanMovieButton" type="button">Scan Movies</button>
+              <button id="scanTvButton" type="button">Scan TV</button>
+            </div>
+          </div>
+          <div id="downloadsList" class="list empty">No active downloads found.</div>
+        </div>
+      </section>
+    </main>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>
