@@ -42,6 +42,12 @@ Run these steps on the Windows 10 machine that already runs qBittorrent.
    .\scripts\start-windows.ps1
    ```
 
+   To keep it running in the background instead:
+
+   ```powershell
+   .\scripts\start-background.ps1
+   ```
+
 7. If other devices cannot open the app, run PowerShell as Administrator and allow the app port through Windows Firewall:
 
    ```powershell
@@ -111,6 +117,12 @@ After setup, run:
 
 ```powershell
 .\scripts\check-connections.ps1
+```
+
+To check whether the web GUI is running:
+
+```powershell
+.\scripts\status-windows.ps1
 ```
 
 ## Notes
