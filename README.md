@@ -102,6 +102,23 @@ PLEX_MOVIE_SECTION_ID=1
 PLEX_TV_SECTION_ID=2
 ```
 
+## Torrent Sources
+
+The app supports three source types:
+
+- Internet Archive, enabled by default.
+- Torznab/Newznab-compatible sources through `TORZNAB_SOURCES`.
+- RSS feeds with torrent enclosures or magnet links through `TORRENT_RSS_SOURCES`.
+
+Example `.env`:
+
+```env
+TORRENT_RSS_SOURCES=https://example.org/legal-torrents/rss,https://another-source.example/feed
+TORZNAB_SOURCES=https://indexer.example/api?t=search&apikey=KEY
+```
+
+For sites without RSS or an API, add a custom adapter in `src/search.js`. Use that only for sources you are allowed to access and avoid scraping pages that block automated access in their terms.
+
 ## Download Paths
 
 These paths must exist on the Windows 10 qBittorrent machine:

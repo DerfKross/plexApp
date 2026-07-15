@@ -33,6 +33,7 @@ app.get("/api/config", (request, response) => {
   response.json({
     directTorrentUrlsAllowed: config.sources.allowDirectTorrentUrls,
     torznabSources: config.sources.torznab.map((source) => new URL(source).hostname),
+    rssSources: config.sources.rss.map((source) => new URL(source).hostname),
     hasPlexToken: Boolean(config.plex.token)
   });
 });
