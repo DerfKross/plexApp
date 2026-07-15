@@ -51,7 +51,7 @@ http://localhost:3747
 From another device on your home network:
 
 ```text
-http://192.168.1.31:3747
+http://192.168.1.131:3747
 ```
 
 ## Updating Later

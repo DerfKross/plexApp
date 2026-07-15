@@ -7,5 +7,5 @@ if (-not (Test-Path ".env")) {
 
 Write-Host "Starting PlexApp..."
 Write-Host "Local URL: http://localhost:3747"
-Write-Host "Home network URL: http://192.168.1.31:3747"
+Write-Host "Home network URL: http://192.168.1.131:3747"
 npm start
