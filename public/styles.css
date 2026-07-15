@@ -123,6 +123,15 @@ h2 {
   gap: 10px;
 }
 
+.feed-actions {
+  display: flex;
+}
+
+.feed-actions button {
+  min-height: 36px;
+  padding: 0 12px;
+}
+
 .segmented {
   display: inline-grid;
   grid-template-columns: repeat(2, minmax(116px, 1fr));
@@ -239,6 +248,55 @@ h2 {
   text-decoration: none;
 }
 
+.feed-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.feed-buttons button,
+.feed-buttons a {
+  display: grid;
+  min-height: 34px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 0 10px;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.description {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.thumb {
+  width: min(180px, 100%);
+  max-height: 140px;
+  object-fit: cover;
+  border-radius: 7px;
+  margin-top: 10px;
+  border: 1px solid var(--line);
+}
+
+.feed-layout {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 14px;
+}
+
+.poster {
+  width: 96px;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  border-radius: 7px;
+  border: 1px solid var(--line);
+  background: #111416;
+}
+
 .progress-track {
   height: 10px;
   margin-top: 12px;
@@ -286,6 +344,14 @@ h2 {
   .search-row,
   .direct-form {
     grid-template-columns: 1fr;
+  }
+
+  .feed-layout {
+    grid-template-columns: 72px minmax(0, 1fr);
+  }
+
+  .poster {
+    width: 72px;
   }
 
   .panel-head {

@@ -1,6 +1,7 @@
 const state = {
   mediaType: "movie",
-  results: []
+  results: [],
+  rssItems: []
 };
 
 const $ = (selector) => document.querySelector(selector);
@@ -15,6 +16,7 @@ const elements = {
   toast: $("#toast"),
   sourceStatus: $("#sourceStatus"),
   refresh: $("#refreshButton"),
+  browseRss: $("#browseRssButton"),
   scanMovie: $("#scanMovieButton"),
   scanTv: $("#scanTvButton")
 };
@@ -54,6 +56,27 @@ function formatBytes(value) {
   return `${size.toFixed(unit ? 1 : 0)} ${units[unit]}`;
 }
 
+function sourceMeta(item) {
+  return [
+    item.source,
+    item.publishedAt,
+    item.size ? formatBytes(item.size) : "",
+    item.seeders ? `${item.seeders} seeders` : ""
+  ]
+    .filter(Boolean)
+    .map((value) => escapeHtml(value))
+    .join(" - ");
+}
+
+function resultActions(item, index) {
+  return `
+    <div class="item-actions">
+      ${item.detailsUrl ? `<a href="${escapeAttribute(item.detailsUrl)}" target="_blank" rel="noreferrer" title="Open details">Details</a>` : ""}
+      <button type="button" class="primary" data-add="${index}">Add</button>
+    </div>
+  `;
+}
+
 function renderResults() {
   if (!state.results.length) {
     elements.results.className = "list empty";
@@ -69,11 +92,41 @@ function renderResults() {
           <div class="item-head">
             <div>
               <div class="title">${escapeHtml(result.title)}</div>
-              <div class="meta">${escapeHtml(result.source)}${result.size ? ` · ${formatBytes(result.size)}` : ""}${result.seeders ? ` · ${result.seeders} seeders` : ""}</div>
+              <div class="meta">${sourceMeta(result)}</div>
+              ${result.imageUrl ? `<img class="thumb" src="${escapeAttribute(result.imageUrl)}" alt="" loading="lazy" />` : ""}
+              ${result.description ? `<p class="description">${escapeHtml(result.description)}</p>` : ""}
             </div>
-            <div class="item-actions">
-              ${result.detailsUrl ? `<a href="${escapeAttribute(result.detailsUrl)}" target="_blank" rel="noreferrer" title="Open details">Details</a>` : ""}
-              <button type="button" class="primary" data-add="${index}">Add</button>
+            ${resultActions(result, index)}
+          </div>
+        </article>
+      `
+    )
+    .join("");
+}
+
+function renderRssItems() {
+  if (!state.rssItems.length) {
+    elements.results.className = "list empty";
+    elements.results.textContent = "No RSS items found.";
+    return;
+  }
+
+  state.results = state.rssItems;
+  elements.results.className = "list";
+  elements.results.innerHTML = state.rssItems
+    .map(
+      (item, index) => `
+        <article class="item feed-item">
+          <div class="feed-layout">
+            ${item.imageUrl ? `<img class="poster" src="${escapeAttribute(item.imageUrl)}" alt="" loading="lazy" />` : `<div class="poster placeholder"></div>`}
+            <div>
+              <div class="title">${escapeHtml(item.title)}</div>
+              <div class="meta">${sourceMeta(item)}</div>
+              ${item.description ? `<p class="description">${escapeHtml(item.description)}</p>` : ""}
+              <div class="feed-buttons">
+                ${item.detailsUrl ? `<a href="${escapeAttribute(item.detailsUrl)}" target="_blank" rel="noreferrer" title="Open details">Details</a>` : ""}
+                <button type="button" class="primary" data-add="${index}">Add</button>
+              </div>
             </div>
           </div>
         </article>
@@ -93,12 +146,22 @@ function renderDownloads(torrents) {
   elements.downloads.innerHTML = torrents
     .map((torrent) => {
       const percent = Math.round((torrent.progress || 0) * 100);
+      const meta = [
+        torrent.category || "uncategorized",
+        torrent.state,
+        `${percent}%`,
+        torrent.dlspeed ? `${formatBytes(torrent.dlspeed)}/s` : ""
+      ]
+        .filter(Boolean)
+        .map((value) => escapeHtml(value))
+        .join(" - ");
+
       return `
         <article class="item">
           <div class="item-head">
             <div>
               <div class="title">${escapeHtml(torrent.name)}</div>
-              <div class="meta">${escapeHtml(torrent.category || "uncategorized")} · ${escapeHtml(torrent.state)} · ${percent}%${torrent.dlspeed ? ` · ${formatBytes(torrent.dlspeed)}/s` : ""}</div>
+              <div class="meta">${meta}</div>
             </div>
           </div>
           <div class="progress-track" aria-label="${percent}% complete">
@@ -136,6 +199,17 @@ async function search() {
   state.results = data.results || [];
   elements.sourceStatus.textContent = data.errors?.length ? `${data.errors.length} source issue` : `${state.results.length} results`;
   renderResults();
+}
+
+async function browseRss() {
+  const mediaType = selectedMediaType();
+  elements.results.className = "list empty";
+  elements.results.textContent = "Loading RSS feed items...";
+  const data = await api(`/api/rss?mediaType=${encodeURIComponent(mediaType)}`);
+  state.mediaType = mediaType;
+  state.rssItems = data.items || [];
+  elements.sourceStatus.textContent = data.errors?.length ? `${data.errors.length} RSS source issue` : `${state.rssItems.length} RSS items`;
+  renderRssItems();
 }
 
 async function addResult(index) {
@@ -201,6 +275,10 @@ elements.results.addEventListener("click", (event) => {
 
 elements.refresh.addEventListener("click", () => {
   refreshDownloads().catch((error) => showToast(error.message, true));
+});
+
+elements.browseRss.addEventListener("click", () => {
+  browseRss().catch((error) => showToast(error.message, true));
 });
 
 elements.scanMovie.addEventListener("click", () => scan("movie").catch((error) => showToast(error.message, true)));

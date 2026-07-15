@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { config } from "./config.js";
 import { addTorrent, listTorrents } from "./qbittorrent.js";
 import { scanPlex } from "./plex.js";
-import { searchTorrents } from "./search.js";
+import { listRssFeedItems, searchTorrents } from "./search.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -45,6 +45,14 @@ app.get(
     const query = String(request.query.q || "");
     const mediaType = requireMediaType(String(request.query.mediaType || "movie"));
     response.json(await searchTorrents({ query, mediaType }));
+  })
+);
+
+app.get(
+  "/api/rss",
+  asyncRoute(async (request, response) => {
+    const mediaType = requireMediaType(String(request.query.mediaType || "movie"));
+    response.json(await listRssFeedItems(mediaType));
   })
 );
 

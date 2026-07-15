@@ -74,6 +74,61 @@ function linkValue(value) {
   return compact(value["@_href"] || value["@_url"] || value["#text"]);
 }
 
+function plainText(value) {
+  return compact(value)
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .slice(0, 600);
+}
+
+function firstImageFromHtml(value) {
+  const match = compact(value).match(/<img[^>]+src=["']([^"']+)["']/i);
+  return match?.[1] || "";
+}
+
+function imageUrlFromRssItem(item) {
+  const imageCandidates = [
+    item["media:thumbnail"]?.["@_url"],
+    item["media:content"]?.["@_url"],
+    item.image?.url,
+    item.image?.["@_href"],
+    firstImageFromHtml(item.description),
+    firstImageFromHtml(item.summary),
+    firstImageFromHtml(item.content),
+    firstImageFromHtml(item["content:encoded"])
+  ];
+
+  return imageCandidates.map((value) => compact(value)).find(Boolean) || "";
+}
+
+function dateFromRssItem(item) {
+  return compact(item.pubDate || item.published || item.updated || item["dc:date"]);
+}
+
+function normalizeRssItem(item, sourceUrl, mediaType, index) {
+  const url = new URL(sourceUrl);
+  const torrentUrl = torrentUrlFromRssItem(item);
+  const magnetUrl = magnetUrlFromRssItem(item);
+  const description = plainText(item.description || item.summary || item.content || item["content:encoded"]);
+
+  return {
+    id: `rss:${url.hostname}:${index}:${item.guid?.["#text"] || item.id || item.link || item.title}`,
+    title: compact(item.title, "Untitled"),
+    source: url.hostname,
+    mediaType,
+    seeders: Number(attrValue(item["torznab:attr"], "seeders") || 0),
+    size: Number(item.size || item.enclosure?.["@_length"] || 0),
+    url: torrentUrl || linkValue(item.link),
+    magnet: magnetUrl,
+    detailsUrl: linkValue(item.comments || item.guid?.["#text"] || item.id || item.link),
+    imageUrl: imageUrlFromRssItem(item),
+    description,
+    publishedAt: dateFromRssItem(item)
+  };
+}
+
 async function searchTorznab(sourceUrl, query, mediaType) {
   const url = new URL(sourceUrl);
   url.searchParams.set("t", "search");
@@ -122,6 +177,16 @@ function magnetUrlFromRssItem(item) {
 }
 
 async function searchRssSource(sourceUrl, query, mediaType) {
+  const items = await readRssItems(sourceUrl);
+
+  return items
+    .filter((item) => queryMatches(compact(item.title), query))
+    .slice(0, 25)
+    .map((item, index) => normalizeRssItem(item, sourceUrl, mediaType, index))
+    .filter((item) => item.url || item.magnet);
+}
+
+async function readRssItems(sourceUrl) {
   const url = new URL(sourceUrl);
   const response = await fetch(url);
   if (!response.ok) {
@@ -130,28 +195,26 @@ async function searchRssSource(sourceUrl, query, mediaType) {
 
   const xml = parser.parse(await response.text());
   const channel = xml.rss?.channel || xml.feed || {};
-  const items = toArray(channel.item || channel.entry);
+  return toArray(channel.item || channel.entry);
+}
 
-  return items
-    .filter((item) => queryMatches(compact(item.title), query))
-    .slice(0, 25)
-    .map((item, index) => {
-      const torrentUrl = torrentUrlFromRssItem(item);
-      const magnetUrl = magnetUrlFromRssItem(item);
-
-      return {
-        id: `rss:${url.hostname}:${index}:${item.guid?.["#text"] || item.id || item.link || item.title}`,
-        title: compact(item.title, "Untitled"),
-        source: url.hostname,
-        mediaType,
-        seeders: Number(attrValue(item["torznab:attr"], "seeders") || 0),
-        size: Number(item.size || item.enclosure?.["@_length"] || 0),
-        url: torrentUrl || linkValue(item.link),
-        magnet: magnetUrl,
-        detailsUrl: linkValue(item.comments || item.guid?.["#text"] || item.id || item.link)
-      };
+export async function listRssFeedItems(mediaType) {
+  const settled = await Promise.allSettled(
+    config.sources.rss.map(async (source) => {
+      const items = await readRssItems(source);
+      return items
+        .slice(0, 50)
+        .map((item, index) => normalizeRssItem(item, source, mediaType, index))
+        .filter((item) => item.url || item.magnet || item.detailsUrl);
     })
-    .filter((item) => item.url || item.magnet);
+  );
+
+  const items = settled.flatMap((result) => (result.status === "fulfilled" ? result.value : []));
+  const errors = settled
+    .filter((result) => result.status === "rejected")
+    .map((result) => result.reason.message);
+
+  return { items, errors };
 }
 
 export async function searchTorrents({ query, mediaType }) {
