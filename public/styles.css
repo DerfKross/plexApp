@@ -265,6 +265,11 @@ h2 {
   color: #160b09;
 }
 
+.size-badge.unknown {
+  background: #343d44;
+  color: var(--muted);
+}
+
 .item-actions {
   display: flex;
   gap: 8px;

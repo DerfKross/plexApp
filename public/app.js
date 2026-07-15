@@ -85,7 +85,7 @@ function sizeClass(value) {
 
 function sizeBadge(item) {
   if (!item.size) {
-    return "";
+    return `<span class="size-badge unknown">Unknown size</span>`;
   }
   return `<span class="size-badge ${sizeClass(item.size)}">${formatBytes(item.size)}</span>`;
 }
