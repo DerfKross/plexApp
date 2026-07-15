@@ -77,6 +77,8 @@ cd C:\Apps\plexApp
 
 That script runs `git pull` and `npm install`.
 
+It also appends newly added `.env` options from `.env.example` without changing your existing passwords, tokens, paths, or source URLs.
+
 ## qBittorrent Settings
 
 In qBittorrent, enable **Tools > Options > Web UI**.
