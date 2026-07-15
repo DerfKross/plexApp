@@ -67,12 +67,27 @@ function sourceMeta(item) {
   return [
     item.source,
     item.publishedAt,
-    item.size ? formatBytes(item.size) : "",
     item.seeders ? `${item.seeders} seeders` : ""
   ]
     .filter(Boolean)
     .map((value) => escapeHtml(value))
     .join(" - ");
+}
+
+function sizeClass(value) {
+  const size = Number(value || 0);
+  const gb = size / 1024 / 1024 / 1024;
+  if (!size) return "unknown";
+  if (gb < 1) return "small";
+  if (gb <= 3) return "medium";
+  return "large";
+}
+
+function sizeBadge(item) {
+  if (!item.size) {
+    return "";
+  }
+  return `<span class="size-badge ${sizeClass(item.size)}">${formatBytes(item.size)}</span>`;
 }
 
 function renderRssSourceButtons(sources) {
@@ -119,7 +134,7 @@ function renderResults() {
           <div class="item-head">
             <div>
               <div class="title">${escapeHtml(result.title)}</div>
-              <div class="meta">${sourceMeta(result)}</div>
+              <div class="meta-line"><span class="meta">${sourceMeta(result)}</span>${sizeBadge(result)}</div>
               ${result.imageUrl ? `<img class="thumb" src="${escapeAttribute(result.imageUrl)}" alt="" loading="lazy" />` : ""}
               ${result.description ? `<p class="description">${escapeHtml(result.description)}</p>` : ""}
             </div>
@@ -148,7 +163,7 @@ function renderRssItems() {
             ${item.imageUrl ? `<img class="poster" src="${escapeAttribute(item.imageUrl)}" alt="" loading="lazy" />` : `<div class="poster placeholder"></div>`}
             <div>
               <div class="title">${escapeHtml(item.title)}</div>
-              <div class="meta">${sourceMeta(item)}</div>
+              <div class="meta-line"><span class="meta">${sourceMeta(item)}</span>${sizeBadge(item)}</div>
               ${item.description ? `<p class="description">${escapeHtml(item.description)}</p>` : ""}
               <div class="feed-buttons">
                 ${item.detailsUrl ? `<a href="${escapeAttribute(item.detailsUrl)}" target="_blank" rel="noreferrer" title="Open details">Details</a>` : ""}

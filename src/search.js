@@ -60,6 +60,16 @@ function attrValue(attributes, name) {
   return toArray(attributes).find((attr) => attr?.["@_name"] === name)?.["@_value"];
 }
 
+function numericSize(...values) {
+  for (const value of values) {
+    const number = Number(value);
+    if (Number.isFinite(number) && number > 0) {
+      return number;
+    }
+  }
+  return 0;
+}
+
 function linkValue(value) {
   if (!value) return "";
   if (typeof value === "string") return compact(value);
@@ -119,7 +129,7 @@ function normalizeRssItem(item, sourceUrl, mediaType, index, sourceIndex = -1) {
     sourceIndex,
     mediaType: mediaType || "",
     seeders: Number(attrValue(item["torznab:attr"], "seeders") || 0),
-    size: Number(item.size || item.enclosure?.["@_length"] || 0),
+    size: numericSize(item.size, item.enclosure?.["@_length"], attrValue(item["torznab:attr"], "size"), item.length),
     url: torrentUrl || linkValue(item.link),
     magnet: magnetUrl,
     detailsUrl: linkValue(item.comments || item.guid?.["#text"] || item.id || item.link),
@@ -148,7 +158,7 @@ async function searchTorznab(sourceUrl, query, mediaType) {
     source: url.hostname,
     mediaType: mediaType || "",
     seeders: Number(attrValue(item["torznab:attr"], "seeders") || 0),
-    size: Number(item.size || 0),
+    size: numericSize(item.size, attrValue(item["torznab:attr"], "size"), item.enclosure?.["@_length"]),
     url: compact(item.link),
     magnet: compact(item.magneturl),
     detailsUrl: compact(item.comments || item.guid?.["#text"] || item.link)

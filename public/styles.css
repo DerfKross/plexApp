@@ -229,6 +229,42 @@ h2 {
   font-size: 13px;
 }
 
+.meta-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.meta-line .meta {
+  margin-top: 0;
+}
+
+.size-badge {
+  display: inline-grid;
+  min-height: 24px;
+  place-items: center;
+  border-radius: 7px;
+  padding: 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #101310;
+}
+
+.size-badge.small {
+  background: #58c28b;
+}
+
+.size-badge.medium {
+  background: #e5c04a;
+}
+
+.size-badge.large {
+  background: #e06b5d;
+  color: #160b09;
+}
+
 .item-actions {
   display: flex;
   gap: 8px;
