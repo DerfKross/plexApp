@@ -80,6 +80,7 @@ app.use((error, request, response, next) => {
   response.status(400).json({ error: error.message || "Request failed." });
 });
 
-app.listen(config.port, () => {
-  console.log(`PlexApp is running at http://localhost:${config.port}`);
+app.listen(config.port, config.host, () => {
+  console.log(`PlexApp is running at http://${config.host}:${config.port}`);
+  console.log(`Local URL: http://localhost:${config.port}`);
 });

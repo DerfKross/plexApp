@@ -42,6 +42,12 @@ Run these steps on the Windows 10 machine that already runs qBittorrent.
    .\scripts\start-windows.ps1
    ```
 
+7. If other devices cannot open the app, run PowerShell as Administrator and allow the app port through Windows Firewall:
+
+   ```powershell
+   .\scripts\open-firewall.ps1
+   ```
+
 Open the app on the qBittorrent server:
 
 ```text

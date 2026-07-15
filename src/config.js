@@ -10,6 +10,7 @@ const splitCsv = (value) =>
 
 export const config = {
   port: Number(process.env.PORT || 3747),
+  host: process.env.HOST || "0.0.0.0",
   qbittorrent: {
     url: process.env.QBITTORRENT_URL || "http://127.0.0.1:8080",
     username: process.env.QBITTORRENT_USERNAME || "",
