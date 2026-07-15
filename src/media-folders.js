@@ -11,6 +11,16 @@ function requireTvRoot() {
   return path.resolve(config.paths.tv);
 }
 
+function folderAccessError(error, configuredPath) {
+  if (error.code === "ENOENT") {
+    return new Error(`TV_SAVE_PATH does not exist or the drive is unavailable: ${configuredPath}`);
+  }
+  if (error.code === "EACCES" || error.code === "EPERM") {
+    return new Error(`PlexApp does not have permission to access TV_SAVE_PATH: ${configuredPath}`);
+  }
+  return new Error(`Could not access TV_SAVE_PATH (${configuredPath}): ${error.message}`);
+}
+
 function validateShowFolderName(folderName) {
   const cleaned = String(folderName || "").trim();
   if (!cleaned) {
@@ -37,8 +47,13 @@ function resolveInsideTvRoot(folderName) {
 
 export async function listTvFolders() {
   const root = requireTvRoot();
-  await fs.mkdir(root, { recursive: true });
-  const entries = await fs.readdir(root, { withFileTypes: true });
+  let entries;
+  try {
+    await fs.mkdir(root, { recursive: true });
+    entries = await fs.readdir(root, { withFileTypes: true });
+  } catch (error) {
+    throw folderAccessError(error, config.paths.tv);
+  }
 
   return entries
     .filter((entry) => entry.isDirectory())
@@ -48,6 +63,10 @@ export async function listTvFolders() {
 
 export async function ensureTvFolder(folderName) {
   const { folderName: cleaned, target } = resolveInsideTvRoot(folderName);
-  await fs.mkdir(target, { recursive: true });
+  try {
+    await fs.mkdir(target, { recursive: true });
+  } catch (error) {
+    throw folderAccessError(error, target);
+  }
   return { folderName: cleaned, savePath: target };
 }

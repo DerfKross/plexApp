@@ -33,3 +33,19 @@ Write-Host "Firewall rules for PlexApp:"
 Get-NetFirewallRule -DisplayName "PlexApp Web GUI 3747" -ErrorAction SilentlyContinue |
   Get-NetFirewallPortFilter |
   Format-Table Protocol,LocalPort,RemotePort -AutoSize
+
+Write-Host ""
+Write-Host "Configured media paths:"
+if (Test-Path ".env") {
+  $mediaLines = Select-String -Path ".env" -Pattern "^(MOVIE_SAVE_PATH|TV_SAVE_PATH)="
+  foreach ($line in $mediaLines) {
+    $parts = $line.Line -split "=", 2
+    $name = $parts[0]
+    $value = $parts[1]
+    if (Test-Path $value) {
+      Write-Host "$name OK: $value"
+    } else {
+      Write-Host "$name NOT FOUND: $value"
+    }
+  }
+}
