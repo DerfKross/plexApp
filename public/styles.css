@@ -132,6 +132,28 @@ h2 {
   padding: 0 12px;
 }
 
+.source-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.source-buttons.hidden {
+  display: none;
+}
+
+.source-buttons button {
+  min-height: 34px;
+  padding: 0 10px;
+}
+
+.source-buttons button.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #16120b;
+  font-weight: 700;
+}
+
 .content-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(360px, 0.9fr);

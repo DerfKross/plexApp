@@ -15,6 +15,7 @@ const elements = {
   downloads: $("#downloadsList"),
   toast: $("#toast"),
   sourceStatus: $("#sourceStatus"),
+  rssSourceButtons: $("#rssSourceButtons"),
   refresh: $("#refreshButton"),
   browseRss: $("#browseRssButton"),
   mediaDialog: $("#mediaDialog"),
@@ -65,6 +66,26 @@ function sourceMeta(item) {
     .filter(Boolean)
     .map((value) => escapeHtml(value))
     .join(" - ");
+}
+
+function renderRssSourceButtons(sources) {
+  if (!sources.length) {
+    elements.rssSourceButtons.classList.add("hidden");
+    elements.rssSourceButtons.innerHTML = "";
+    return;
+  }
+
+  elements.rssSourceButtons.classList.remove("hidden");
+  elements.rssSourceButtons.innerHTML = [
+    `<button type="button" data-rss-source="all">All</button>`,
+    ...sources.map((source) => `<button type="button" data-rss-source="${source.index}">${escapeHtml(source.label)}</button>`)
+  ].join("");
+}
+
+function setActiveRssSource(source) {
+  elements.rssSourceButtons.querySelectorAll("[data-rss-source]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.rssSource === String(source));
+  });
 }
 
 function resultActions(item, index) {
@@ -198,12 +219,14 @@ async function search() {
   renderResults();
 }
 
-async function browseRss() {
+async function browseRss(source = "all") {
   elements.results.className = "list empty";
   elements.results.textContent = "Loading RSS feed items...";
-  const data = await api("/api/rss");
+  const path = source === "all" ? "/api/rss" : `/api/rss?source=${encodeURIComponent(source)}`;
+  const data = await api(path);
   state.rssItems = data.items || [];
   elements.sourceStatus.textContent = data.errors?.length ? `${data.errors.length} RSS source issue` : `${state.rssItems.length} RSS items`;
+  setActiveRssSource(source);
   renderRssItems();
 }
 
@@ -295,6 +318,12 @@ elements.browseRss.addEventListener("click", () => {
   browseRss().catch((error) => showToast(error.message, true));
 });
 
+elements.rssSourceButtons.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-rss-source]");
+  if (!button) return;
+  browseRss(button.dataset.rssSource).catch((error) => showToast(error.message, true));
+});
+
 elements.mediaDialog.addEventListener("click", (event) => {
   if (event.target === elements.mediaDialog || event.target === elements.cancelMedia) {
     closeMediaDialog();
@@ -310,4 +339,7 @@ elements.scanMovie.addEventListener("click", () => scan("movie").catch((error) =
 elements.scanTv.addEventListener("click", () => scan("tv").catch((error) => showToast(error.message, true)));
 
 refreshDownloads().catch(() => {});
+api("/api/config")
+  .then((config) => renderRssSourceButtons(config.rssSources || []))
+  .catch(() => {});
 window.setInterval(() => refreshDownloads().catch(() => {}), 5000);

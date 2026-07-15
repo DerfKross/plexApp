@@ -34,7 +34,11 @@ app.get("/api/config", (request, response) => {
     directTorrentUrlsAllowed: config.sources.allowDirectTorrentUrls,
     internetArchiveEnabled: config.sources.internetArchive,
     torznabSources: config.sources.torznab.map((source) => new URL(source).hostname),
-    rssSources: config.sources.rss.map((source) => new URL(source).hostname),
+    rssSources: config.sources.rss.map((source, index) => ({
+      index,
+      label: new URL(source).hostname
+    })),
+    rssItemsPerFeed: config.sources.rssItemsPerFeed,
     hasPlexToken: Boolean(config.plex.token)
   });
 });
@@ -52,7 +56,12 @@ app.get(
   "/api/rss",
   asyncRoute(async (request, response) => {
     const mediaType = request.query.mediaType ? requireMediaType(String(request.query.mediaType)) : "";
-    response.json(await listRssFeedItems(mediaType));
+    const source = request.query.source;
+    const sourceIndex = source === undefined ? null : Number(source);
+    if (source !== undefined && (!Number.isInteger(sourceIndex) || sourceIndex < 0 || sourceIndex >= config.sources.rss.length)) {
+      throw new Error("RSS source index is invalid.");
+    }
+    response.json(await listRssFeedItems(mediaType, sourceIndex));
   })
 );
 

@@ -106,7 +106,7 @@ function dateFromRssItem(item) {
   return compact(item.pubDate || item.published || item.updated || item["dc:date"]);
 }
 
-function normalizeRssItem(item, sourceUrl, mediaType, index) {
+function normalizeRssItem(item, sourceUrl, mediaType, index, sourceIndex = -1) {
   const url = new URL(sourceUrl);
   const torrentUrl = torrentUrlFromRssItem(item);
   const magnetUrl = magnetUrlFromRssItem(item);
@@ -116,6 +116,7 @@ function normalizeRssItem(item, sourceUrl, mediaType, index) {
     id: `rss:${url.hostname}:${index}:${item.guid?.["#text"] || item.id || item.link || item.title}`,
     title: compact(item.title, "Untitled"),
     source: url.hostname,
+    sourceIndex,
     mediaType: mediaType || "",
     seeders: Number(attrValue(item["torznab:attr"], "seeders") || 0),
     size: Number(item.size || item.enclosure?.["@_length"] || 0),
@@ -197,13 +198,18 @@ async function readRssItems(sourceUrl) {
   return toArray(channel.item || channel.entry);
 }
 
-export async function listRssFeedItems(mediaType) {
+export async function listRssFeedItems(mediaType, sourceIndex = null) {
+  const indexedSources = config.sources.rss.map((source, index) => ({ source, index }));
+  const selectedSources = Number.isInteger(sourceIndex)
+    ? indexedSources.filter((source) => source.index === sourceIndex)
+    : indexedSources;
+
   const settled = await Promise.allSettled(
-    config.sources.rss.map(async (source) => {
+    selectedSources.map(async ({ source, index: rssSourceIndex }) => {
       const items = await readRssItems(source);
       return items
-        .slice(0, 50)
-        .map((item, index) => normalizeRssItem(item, source, mediaType, index))
+        .slice(0, config.sources.rssItemsPerFeed)
+        .map((item, index) => normalizeRssItem(item, source, mediaType, index, rssSourceIndex))
         .filter((item) => item.url || item.magnet || item.detailsUrl);
     })
   );
@@ -213,7 +219,7 @@ export async function listRssFeedItems(mediaType) {
     .filter((result) => result.status === "rejected")
     .map((result) => result.reason.message);
 
-  return { items, errors };
+  return { items, errors, sourceIndex };
 }
 
 export async function searchTorrents({ query, mediaType }) {
