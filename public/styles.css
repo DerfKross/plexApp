@@ -25,7 +25,8 @@ body {
 }
 
 button,
-input {
+input,
+select {
   font: inherit;
 }
 
@@ -50,7 +51,8 @@ button.primary,
   font-weight: 700;
 }
 
-input {
+input,
+select {
   min-height: 44px;
   width: 100%;
   border: 1px solid var(--line);
@@ -365,11 +367,32 @@ h2 {
   margin-top: 16px;
 }
 
+.modal-actions.two {
+  grid-template-columns: repeat(2, 1fr);
+}
+
 .modal-actions button[data-media-choice] {
   background: var(--accent);
   border-color: var(--accent);
   color: #16120b;
   font-weight: 700;
+}
+
+.tv-folder-panel {
+  display: grid;
+  gap: 8px;
+  margin-top: 16px;
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+}
+
+.tv-folder-panel.hidden {
+  display: none;
+}
+
+.tv-folder-panel label {
+  color: var(--muted);
+  font-size: 13px;
 }
 
 @media (max-width: 820px) {

@@ -20,6 +20,11 @@ const elements = {
   browseRss: $("#browseRssButton"),
   mediaDialog: $("#mediaDialog"),
   mediaDialogItem: $("#mediaDialogItem"),
+  tvFolderPanel: $("#tvFolderPanel"),
+  tvFolderSelect: $("#tvFolderSelect"),
+  tvFolderInput: $("#tvFolderInput"),
+  confirmTvFolder: $("#confirmTvFolderButton"),
+  backMedia: $("#backMediaButton"),
   cancelMedia: $("#cancelMediaButton"),
   scanMovie: $("#scanMovieButton"),
   scanTv: $("#scanTvButton")
@@ -233,6 +238,7 @@ async function browseRss(source = "all") {
 function openMediaDialog(item, afterAdd) {
   state.pendingAdd = { item, afterAdd };
   elements.mediaDialogItem.textContent = item.title || "Selected torrent";
+  hideTvFolderPanel();
   elements.mediaDialog.classList.remove("hidden");
 }
 
@@ -240,9 +246,31 @@ function closeMediaDialog() {
   state.pendingAdd = null;
   elements.mediaDialog.classList.add("hidden");
   elements.mediaDialogItem.textContent = "";
+  hideTvFolderPanel();
 }
 
-async function addTorrentWithMedia(mediaType) {
+function hideTvFolderPanel() {
+  elements.tvFolderPanel.classList.add("hidden");
+  elements.tvFolderInput.value = "";
+  elements.tvFolderSelect.innerHTML = `<option value="">Choose existing folder</option>`;
+}
+
+async function showTvFolderPanel() {
+  const data = await api("/api/tv-folders");
+  elements.tvFolderSelect.innerHTML = [
+    `<option value="">Choose existing folder</option>`,
+    ...(data.folders || []).map((folder) => `<option value="${escapeAttribute(folder)}">${escapeHtml(folder)}</option>`)
+  ].join("");
+  elements.tvFolderPanel.classList.remove("hidden");
+}
+
+function selectedTvFolderName() {
+  const newFolder = elements.tvFolderInput.value.trim();
+  if (newFolder) return newFolder;
+  return elements.tvFolderSelect.value.trim();
+}
+
+async function addTorrentWithMedia(mediaType, tvFolderName = "") {
   if (!state.pendingAdd) return;
   const { item, afterAdd } = state.pendingAdd;
   await api("/api/torrents", {
@@ -250,7 +278,8 @@ async function addTorrentWithMedia(mediaType) {
     body: JSON.stringify({
       mediaType,
       torrentUrl: item.url,
-      magnetUrl: item.magnet
+      magnetUrl: item.magnet,
+      tvFolderName
     })
   });
   if (afterAdd) afterAdd();
@@ -330,9 +359,23 @@ elements.mediaDialog.addEventListener("click", (event) => {
     return;
   }
 
+  if (event.target === elements.backMedia) {
+    hideTvFolderPanel();
+    return;
+  }
+
+  if (event.target === elements.confirmTvFolder) {
+    addTorrentWithMedia("tv", selectedTvFolderName()).catch((error) => showToast(error.message, true));
+    return;
+  }
+
   const button = event.target.closest("[data-media-choice]");
   if (!button) return;
-  addTorrentWithMedia(button.dataset.mediaChoice).catch((error) => showToast(error.message, true));
+  if (button.dataset.mediaChoice === "tv") {
+    showTvFolderPanel().catch((error) => showToast(error.message, true));
+    return;
+  }
+  addTorrentWithMedia("movie").catch((error) => showToast(error.message, true));
 });
 
 elements.scanMovie.addEventListener("click", () => scan("movie").catch((error) => showToast(error.message, true)));

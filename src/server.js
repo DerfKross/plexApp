@@ -2,6 +2,7 @@ import express from "express";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { config } from "./config.js";
+import { ensureTvFolder, listTvFolders } from "./media-folders.js";
 import { addTorrent, listTorrents } from "./qbittorrent.js";
 import { scanPlex } from "./plex.js";
 import { listRssFeedItems, searchTorrents } from "./search.js";
@@ -71,12 +72,24 @@ app.post(
     const mediaType = requireMediaType(request.body.mediaType);
     const torrentUrl = String(request.body.torrentUrl || "");
     const magnetUrl = String(request.body.magnetUrl || "");
+    const tvFolderName = String(request.body.tvFolderName || "");
+    const tvFolder = mediaType === "tv" ? await ensureTvFolder(tvFolderName) : null;
 
     if (!config.sources.allowDirectTorrentUrls && !torrentUrl.startsWith("https://archive.org/")) {
       throw new Error("Direct torrent URLs are disabled on this server.");
     }
 
-    response.json(await addTorrent({ torrentUrl, magnetUrl, mediaType }));
+    response.json(await addTorrent({ torrentUrl, magnetUrl, mediaType, savePath: tvFolder?.savePath }));
+  })
+);
+
+app.get(
+  "/api/tv-folders",
+  asyncRoute(async (request, response) => {
+    response.json({
+      root: config.paths.tv,
+      folders: await listTvFolders()
+    });
   })
 );
 

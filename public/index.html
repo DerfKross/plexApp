@@ -69,6 +69,18 @@
           <button type="button" data-media-choice="tv">TV Show</button>
           <button id="cancelMediaButton" type="button">Cancel</button>
         </div>
+        <div id="tvFolderPanel" class="tv-folder-panel hidden">
+          <label for="tvFolderSelect">Existing TV folder</label>
+          <select id="tvFolderSelect">
+            <option value="">Choose existing folder</option>
+          </select>
+          <label for="tvFolderInput">New show folder</label>
+          <input id="tvFolderInput" type="text" placeholder="Show name" autocomplete="off" />
+          <div class="modal-actions two">
+            <button id="confirmTvFolderButton" type="button" class="primary">Add to TV</button>
+            <button id="backMediaButton" type="button">Back</button>
+          </div>
+        </div>
       </div>
     </div>
 

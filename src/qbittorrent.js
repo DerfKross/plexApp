@@ -31,9 +31,9 @@ async function login() {
   return cookie;
 }
 
-export async function addTorrent({ torrentUrl, magnetUrl, mediaType }) {
+export async function addTorrent({ torrentUrl, magnetUrl, mediaType, savePath }) {
   const authCookie = await login();
-  const savepath = config.paths[mediaType];
+  const savepath = savePath || config.paths[mediaType];
 
   if (!savepath) {
     throw new Error(`Missing ${mediaType === "movie" ? "MOVIE_SAVE_PATH" : "TV_SAVE_PATH"} in .env.`);

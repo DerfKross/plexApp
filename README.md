@@ -136,6 +136,8 @@ MOVIE_SAVE_PATH=D:\Media\Movies
 TV_SAVE_PATH=D:\Media\TV Shows
 ```
 
+When a user adds a TV show, PlexApp lists the existing folders inside `TV_SAVE_PATH`. The user can choose one of those folders or type a new show name; PlexApp creates the folder and sends that folder as qBittorrent's save path.
+
 ## Connection Check
 
 After setup, run:
