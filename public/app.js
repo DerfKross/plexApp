@@ -171,18 +171,20 @@ function renderDownloads(torrents) {
   elements.downloads.innerHTML = torrents
     .map((torrent) => {
       const percent = Math.round((torrent.progress || 0) * 100);
+      const isDone = percent >= 100 || torrent.state === "done";
       const meta = [
         torrent.category || "uncategorized",
-        torrent.state,
+        isDone ? "Done" : torrent.state,
         `${percent}%`,
-        torrent.dlspeed ? `${formatBytes(torrent.dlspeed)}/s` : ""
+        torrent.remembered ? "completed earlier" : "",
+        !isDone && torrent.dlspeed ? `${formatBytes(torrent.dlspeed)}/s` : ""
       ]
         .filter(Boolean)
         .map((value) => escapeHtml(value))
         .join(" - ");
 
       return `
-        <article class="item">
+        <article class="item ${isDone ? "done" : ""}">
           <div class="item-head">
             <div>
               <div class="title">${escapeHtml(torrent.name)}</div>

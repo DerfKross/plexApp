@@ -207,6 +207,10 @@ h2 {
   padding: 14px;
 }
 
+.item.done {
+  border-color: rgba(88, 194, 139, 0.55);
+}
+
 .item-head {
   display: flex;
   align-items: start;
