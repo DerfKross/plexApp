@@ -161,7 +161,7 @@ export async function searchTorrents({ query, mediaType }) {
   }
 
   const searches = [
-    searchInternetArchive(cleanedQuery, mediaType),
+    ...(config.sources.internetArchive ? [searchInternetArchive(cleanedQuery, mediaType)] : []),
     ...config.sources.torznab.map((source) => searchTorznab(source, cleanedQuery, mediaType)),
     ...config.sources.rss.map((source) => searchRssSource(source, cleanedQuery, mediaType))
   ];

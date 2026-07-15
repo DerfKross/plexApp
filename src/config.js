@@ -27,6 +27,7 @@ export const config = {
     tvSectionId: process.env.PLEX_TV_SECTION_ID || ""
   },
   sources: {
+    internetArchive: process.env.ENABLE_INTERNET_ARCHIVE !== "false",
     torznab: splitCsv(process.env.TORZNAB_SOURCES),
     rss: splitCsv(process.env.TORRENT_RSS_SOURCES),
     allowDirectTorrentUrls: process.env.ALLOW_DIRECT_TORRENT_URLS !== "false"

@@ -113,9 +113,12 @@ The app supports three source types:
 Example `.env`:
 
 ```env
+ENABLE_INTERNET_ARCHIVE=false
 TORRENT_RSS_SOURCES=https://example.org/legal-torrents/rss,https://another-source.example/feed
 TORZNAB_SOURCES=https://indexer.example/api?t=search&apikey=KEY
 ```
+
+For RSS-only search, set `ENABLE_INTERNET_ARCHIVE=false`, leave `TORZNAB_SOURCES` blank, and put your RSS feed URLs in `TORRENT_RSS_SOURCES`.
 
 For sites without RSS or an API, add a custom adapter in `src/search.js`. Use that only for sources you are allowed to access and avoid scraping pages that block automated access in their terms.
 
