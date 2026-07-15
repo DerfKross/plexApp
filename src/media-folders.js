@@ -21,28 +21,37 @@ function folderAccessError(error, configuredPath) {
   return new Error(`Could not access TV_SAVE_PATH (${configuredPath}): ${error.message}`);
 }
 
-function validateShowFolderName(folderName) {
+function validateFolderName(folderName, message) {
   const cleaned = String(folderName || "").trim();
   if (!cleaned) {
-    throw new Error("Choose an existing TV folder or enter a new show folder name.");
+    throw new Error(message);
   }
   if (cleaned === "." || cleaned === ".." || invalidFolderChars.test(cleaned)) {
-    throw new Error("TV show folder name contains invalid Windows filename characters.");
+    throw new Error("Folder name contains invalid Windows filename characters.");
   }
   return cleaned;
 }
 
-function resolveInsideTvRoot(folderName) {
+function validateShowFolderName(folderName) {
+  return validateFolderName(folderName, "Choose an existing TV folder or enter a new show folder name.");
+}
+
+function validateSeasonFolderName(folderName) {
+  return validateFolderName(folderName, "Choose an existing season folder or enter a new season folder name.");
+}
+
+function resolveInsideTvRoot(folderName, seasonFolderName = "") {
   const root = requireTvRoot();
   const cleaned = validateShowFolderName(folderName);
-  const target = path.resolve(root, cleaned);
+  const cleanedSeason = seasonFolderName ? validateSeasonFolderName(seasonFolderName) : "";
+  const target = cleanedSeason ? path.resolve(root, cleaned, cleanedSeason) : path.resolve(root, cleaned);
   const relative = path.relative(root, target);
 
   if (relative.startsWith("..") || path.isAbsolute(relative)) {
     throw new Error("TV show folder must stay inside TV_SAVE_PATH.");
   }
 
-  return { root, folderName: cleaned, target };
+  return { root, folderName: cleaned, seasonFolderName: cleanedSeason, target };
 }
 
 export async function listTvFolders() {
@@ -69,4 +78,30 @@ export async function ensureTvFolder(folderName) {
     throw folderAccessError(error, target);
   }
   return { folderName: cleaned, savePath: target };
+}
+
+export async function listSeasonFolders(showFolderName) {
+  const { target } = resolveInsideTvRoot(showFolderName);
+  let entries;
+  try {
+    await fs.mkdir(target, { recursive: true });
+    entries = await fs.readdir(target, { withFileTypes: true });
+  } catch (error) {
+    throw folderAccessError(error, target);
+  }
+
+  return entries
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+}
+
+export async function ensureTvSeasonFolder(showFolderName, seasonFolderName = "") {
+  const { folderName, seasonFolderName: seasonName, target } = resolveInsideTvRoot(showFolderName, seasonFolderName);
+  try {
+    await fs.mkdir(target, { recursive: true });
+  } catch (error) {
+    throw folderAccessError(error, target);
+  }
+  return { folderName, seasonFolderName: seasonName, savePath: target };
 }

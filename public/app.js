@@ -23,6 +23,8 @@ const elements = {
   tvFolderPanel: $("#tvFolderPanel"),
   tvFolderSelect: $("#tvFolderSelect"),
   tvFolderInput: $("#tvFolderInput"),
+  tvSeasonSelect: $("#tvSeasonSelect"),
+  tvSeasonInput: $("#tvSeasonInput"),
   confirmTvFolder: $("#confirmTvFolderButton"),
   backMedia: $("#backMediaButton"),
   cancelMedia: $("#cancelMediaButton"),
@@ -254,7 +256,9 @@ function closeMediaDialog() {
 function hideTvFolderPanel() {
   elements.tvFolderPanel.classList.add("hidden");
   elements.tvFolderInput.value = "";
+  elements.tvSeasonInput.value = "";
   elements.tvFolderSelect.innerHTML = `<option value="">Choose existing folder</option>`;
+  elements.tvSeasonSelect.innerHTML = `<option value="">No season subfolder</option>`;
 }
 
 async function showTvFolderPanel() {
@@ -266,13 +270,31 @@ async function showTvFolderPanel() {
   elements.tvFolderPanel.classList.remove("hidden");
 }
 
+async function loadSeasonFolders(showFolderName) {
+  const showName = String(showFolderName || "").trim();
+  elements.tvSeasonSelect.innerHTML = `<option value="">No season subfolder</option>`;
+  if (!showName) return;
+
+  const data = await api(`/api/tv-folders/${encodeURIComponent(showName)}/seasons`);
+  elements.tvSeasonSelect.innerHTML = [
+    `<option value="">No season subfolder</option>`,
+    ...(data.folders || []).map((folder) => `<option value="${escapeAttribute(folder)}">${escapeHtml(folder)}</option>`)
+  ].join("");
+}
+
 function selectedTvFolderName() {
   const newFolder = elements.tvFolderInput.value.trim();
   if (newFolder) return newFolder;
   return elements.tvFolderSelect.value.trim();
 }
 
-async function addTorrentWithMedia(mediaType, tvFolderName = "") {
+function selectedTvSeasonFolderName() {
+  const newFolder = elements.tvSeasonInput.value.trim();
+  if (newFolder) return newFolder;
+  return elements.tvSeasonSelect.value.trim();
+}
+
+async function addTorrentWithMedia(mediaType, tvFolderName = "", tvSeasonFolderName = "") {
   if (!state.pendingAdd) return;
   const { item, afterAdd } = state.pendingAdd;
   await api("/api/torrents", {
@@ -281,7 +303,8 @@ async function addTorrentWithMedia(mediaType, tvFolderName = "") {
       mediaType,
       torrentUrl: item.url,
       magnetUrl: item.magnet,
-      tvFolderName
+      tvFolderName,
+      tvSeasonFolderName
     })
   });
   if (afterAdd) afterAdd();
@@ -367,7 +390,7 @@ elements.mediaDialog.addEventListener("click", (event) => {
   }
 
   if (event.target === elements.confirmTvFolder) {
-    addTorrentWithMedia("tv", selectedTvFolderName()).catch((error) => showToast(error.message, true));
+    addTorrentWithMedia("tv", selectedTvFolderName(), selectedTvSeasonFolderName()).catch((error) => showToast(error.message, true));
     return;
   }
 
@@ -382,6 +405,32 @@ elements.mediaDialog.addEventListener("click", (event) => {
 
 elements.scanMovie.addEventListener("click", () => scan("movie").catch((error) => showToast(error.message, true)));
 elements.scanTv.addEventListener("click", () => scan("tv").catch((error) => showToast(error.message, true)));
+
+elements.tvFolderSelect.addEventListener("change", () => {
+  if (elements.tvFolderSelect.value) {
+    elements.tvFolderInput.value = "";
+  }
+  loadSeasonFolders(elements.tvFolderSelect.value).catch((error) => showToast(error.message, true));
+});
+
+elements.tvFolderInput.addEventListener("input", () => {
+  if (elements.tvFolderInput.value.trim()) {
+    elements.tvFolderSelect.value = "";
+  }
+  loadSeasonFolders(elements.tvFolderInput.value).catch(() => {});
+});
+
+elements.tvSeasonSelect.addEventListener("change", () => {
+  if (elements.tvSeasonSelect.value) {
+    elements.tvSeasonInput.value = "";
+  }
+});
+
+elements.tvSeasonInput.addEventListener("input", () => {
+  if (elements.tvSeasonInput.value.trim()) {
+    elements.tvSeasonSelect.value = "";
+  }
+});
 
 refreshDownloads().catch(() => {});
 api("/api/config")

@@ -149,7 +149,7 @@ To convert mapped paths in `.env` automatically on the Windows server:
 .\scripts\convert-mapped-paths.ps1
 ```
 
-When a user adds a TV show, PlexApp lists the existing folders inside `TV_SAVE_PATH`. The user can choose one of those folders or type a new show name; PlexApp creates the folder and sends that folder as qBittorrent's save path.
+When a user adds a TV show, PlexApp lists the existing folders inside `TV_SAVE_PATH`. The user can choose one of those folders or type a new show name, then optionally choose or create a season subfolder such as `Season 09`. PlexApp creates the folders and sends the selected folder as qBittorrent's save path.
 
 ## Connection Check
 

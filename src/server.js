@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { config } from "./config.js";
 import { completedTorrentsMissingFrom, rememberCompletedTorrents } from "./download-history.js";
-import { ensureTvFolder, listTvFolders } from "./media-folders.js";
+import { ensureTvSeasonFolder, listSeasonFolders, listTvFolders } from "./media-folders.js";
 import { addTorrent, listTorrents } from "./qbittorrent.js";
 import { scanPlex } from "./plex.js";
 import { listRssFeedItems, searchTorrents } from "./search.js";
@@ -74,7 +74,8 @@ app.post(
     const torrentUrl = String(request.body.torrentUrl || "");
     const magnetUrl = String(request.body.magnetUrl || "");
     const tvFolderName = String(request.body.tvFolderName || "");
-    const tvFolder = mediaType === "tv" ? await ensureTvFolder(tvFolderName) : null;
+    const tvSeasonFolderName = String(request.body.tvSeasonFolderName || "");
+    const tvFolder = mediaType === "tv" ? await ensureTvSeasonFolder(tvFolderName, tvSeasonFolderName) : null;
 
     if (!config.sources.allowDirectTorrentUrls && !torrentUrl.startsWith("https://archive.org/")) {
       throw new Error("Direct torrent URLs are disabled on this server.");
@@ -90,6 +91,16 @@ app.get(
     response.json({
       root: config.paths.tv,
       folders: await listTvFolders()
+    });
+  })
+);
+
+app.get(
+  "/api/tv-folders/:show/seasons",
+  asyncRoute(async (request, response) => {
+    response.json({
+      show: request.params.show,
+      folders: await listSeasonFolders(request.params.show)
     });
   })
 );
