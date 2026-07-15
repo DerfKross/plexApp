@@ -36,7 +36,7 @@ app.get("/api/config", (request, response) => {
     torznabSources: config.sources.torznab.map((source) => new URL(source).hostname),
     rssSources: config.sources.rss.map((source, index) => ({
       index,
-      label: new URL(source).hostname
+      label: config.sources.rssLabels[index] || new URL(source).hostname
     })),
     rssItemsPerFeed: config.sources.rssItemsPerFeed,
     hasPlexToken: Boolean(config.plex.token)
