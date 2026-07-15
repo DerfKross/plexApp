@@ -43,7 +43,7 @@ app.get(
   "/api/search",
   asyncRoute(async (request, response) => {
     const query = String(request.query.q || "");
-    const mediaType = requireMediaType(String(request.query.mediaType || "movie"));
+    const mediaType = request.query.mediaType ? requireMediaType(String(request.query.mediaType)) : "";
     response.json(await searchTorrents({ query, mediaType }));
   })
 );
@@ -51,7 +51,7 @@ app.get(
 app.get(
   "/api/rss",
   asyncRoute(async (request, response) => {
-    const mediaType = requireMediaType(String(request.query.mediaType || "movie"));
+    const mediaType = request.query.mediaType ? requireMediaType(String(request.query.mediaType)) : "";
     response.json(await listRssFeedItems(mediaType));
   })
 );

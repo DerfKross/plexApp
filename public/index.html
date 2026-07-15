@@ -14,22 +14,12 @@
           <p>Search approved sources, send downloads to qBittorrent, and scan Plex.</p>
         </div>
         <button id="refreshButton" class="icon-button" title="Refresh download progress" aria-label="Refresh download progress">
-          <span aria-hidden="true">↻</span>
+          <span aria-hidden="true">R</span>
         </button>
       </header>
 
       <section class="control-band">
         <form id="searchForm" class="search-form">
-          <div class="segmented" role="group" aria-label="Media type">
-            <label>
-              <input type="radio" name="mediaType" value="movie" />
-              <span>Movie</span>
-            </label>
-            <label>
-              <input type="radio" name="mediaType" value="tv" />
-              <span>TV Show</span>
-            </label>
-          </div>
           <div class="search-row">
             <input id="queryInput" type="search" placeholder="Search title" autocomplete="off" />
             <button type="submit">Search</button>
@@ -53,7 +43,7 @@
             <h2>Results</h2>
             <span id="sourceStatus"></span>
           </div>
-          <div id="resultsList" class="list empty">Run a search to see available torrents.</div>
+          <div id="resultsList" class="list empty">Run a search or browse RSS.</div>
         </div>
 
         <div class="panel">
@@ -68,6 +58,19 @@
         </div>
       </section>
     </main>
+
+    <div id="mediaDialog" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="mediaDialogTitle">
+      <div class="modal-panel">
+        <h2 id="mediaDialogTitle">Send as</h2>
+        <p id="mediaDialogItem" class="modal-title"></p>
+        <div class="modal-actions">
+          <button type="button" data-media-choice="movie">Movie</button>
+          <button type="button" data-media-choice="tv">TV Show</button>
+          <button id="cancelMediaButton" type="button">Cancel</button>
+        </div>
+      </div>
+    </div>
+
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
     <script src="/app.js" type="module"></script>
   </body>

@@ -1,7 +1,7 @@
 const state = {
-  mediaType: "",
   results: [],
-  rssItems: []
+  rssItems: [],
+  pendingAdd: null
 };
 
 const $ = (selector) => document.querySelector(selector);
@@ -17,21 +17,12 @@ const elements = {
   sourceStatus: $("#sourceStatus"),
   refresh: $("#refreshButton"),
   browseRss: $("#browseRssButton"),
+  mediaDialog: $("#mediaDialog"),
+  mediaDialogItem: $("#mediaDialogItem"),
+  cancelMedia: $("#cancelMediaButton"),
   scanMovie: $("#scanMovieButton"),
   scanTv: $("#scanTvButton")
 };
-
-function selectedMediaType() {
-  return new FormData(elements.form).get("mediaType");
-}
-
-function requireSelectedMediaType() {
-  const mediaType = selectedMediaType();
-  if (!["movie", "tv"].includes(mediaType)) {
-    throw new Error("Choose Movie or TV Show first.");
-  }
-  return mediaType;
-}
 
 function showToast(message, isError = false) {
   elements.toast.textContent = message;
@@ -196,64 +187,75 @@ function escapeAttribute(value) {
 }
 
 async function search() {
-  const mediaType = requireSelectedMediaType();
   const query = elements.query.value.trim();
   if (!query) return;
 
   elements.results.className = "list empty";
   elements.results.textContent = "Searching...";
-  const data = await api(`/api/search?q=${encodeURIComponent(query)}&mediaType=${encodeURIComponent(mediaType)}`);
-  state.mediaType = mediaType;
+  const data = await api(`/api/search?q=${encodeURIComponent(query)}`);
   state.results = data.results || [];
   elements.sourceStatus.textContent = data.errors?.length ? `${data.errors.length} source issue` : `${state.results.length} results`;
   renderResults();
 }
 
 async function browseRss() {
-  const mediaType = requireSelectedMediaType();
   elements.results.className = "list empty";
   elements.results.textContent = "Loading RSS feed items...";
-  const data = await api(`/api/rss?mediaType=${encodeURIComponent(mediaType)}`);
-  state.mediaType = mediaType;
+  const data = await api("/api/rss");
   state.rssItems = data.items || [];
   elements.sourceStatus.textContent = data.errors?.length ? `${data.errors.length} RSS source issue` : `${state.rssItems.length} RSS items`;
   renderRssItems();
 }
 
-async function addResult(index) {
-  if (!["movie", "tv"].includes(state.mediaType)) {
-    state.mediaType = requireSelectedMediaType();
-  }
-  const result = state.results[index];
-  await api("/api/torrents", {
-    method: "POST",
-    body: JSON.stringify({
-      mediaType: state.mediaType,
-      torrentUrl: result.url,
-      magnetUrl: result.magnet
-    })
-  });
-  showToast("Torrent sent to qBittorrent.");
-  await refreshDownloads();
+function openMediaDialog(item, afterAdd) {
+  state.pendingAdd = { item, afterAdd };
+  elements.mediaDialogItem.textContent = item.title || "Selected torrent";
+  elements.mediaDialog.classList.remove("hidden");
 }
 
-async function addDirectUrl() {
-  const value = elements.direct.value.trim();
-  if (!value) return;
-  const isMagnet = value.startsWith("magnet:");
-  const mediaType = requireSelectedMediaType();
+function closeMediaDialog() {
+  state.pendingAdd = null;
+  elements.mediaDialog.classList.add("hidden");
+  elements.mediaDialogItem.textContent = "";
+}
 
+async function addTorrentWithMedia(mediaType) {
+  if (!state.pendingAdd) return;
+  const { item, afterAdd } = state.pendingAdd;
   await api("/api/torrents", {
     method: "POST",
     body: JSON.stringify({
       mediaType,
-      torrentUrl: isMagnet ? "" : value,
-      magnetUrl: isMagnet ? value : ""
+      torrentUrl: item.url,
+      magnetUrl: item.magnet
     })
   });
-  elements.direct.value = "";
-  showToast("Torrent URL sent to qBittorrent.");
+  if (afterAdd) afterAdd();
+  closeMediaDialog();
+  showToast("Torrent sent to qBittorrent.");
   await refreshDownloads();
+}
+
+function addResult(index) {
+  const result = state.results[index];
+  openMediaDialog({
+    title: result.title,
+    url: result.url,
+    magnet: result.magnet
+  });
+}
+
+function addDirectUrl() {
+  const value = elements.direct.value.trim();
+  if (!value) return;
+  const isMagnet = value.startsWith("magnet:");
+  openMediaDialog({
+    title: "Direct URL",
+    url: isMagnet ? "" : value,
+    magnet: isMagnet ? value : ""
+  }, () => {
+    elements.direct.value = "";
+  });
 }
 
 async function refreshDownloads() {
@@ -276,23 +278,13 @@ elements.form.addEventListener("submit", (event) => {
 
 elements.directForm.addEventListener("submit", (event) => {
   event.preventDefault();
-  addDirectUrl().catch((error) => showToast(error.message, true));
+  addDirectUrl();
 });
 
 elements.results.addEventListener("click", (event) => {
   const button = event.target.closest("[data-add]");
   if (!button) return;
-  addResult(Number(button.dataset.add)).catch((error) => showToast(error.message, true));
-});
-
-elements.form.addEventListener("change", (event) => {
-  if (event.target.name !== "mediaType") return;
-  state.mediaType = event.target.value;
-  state.results = [];
-  state.rssItems = [];
-  elements.sourceStatus.textContent = "";
-  elements.results.className = "list empty";
-  elements.results.textContent = "Run a search or browse RSS.";
+  addResult(Number(button.dataset.add));
 });
 
 elements.refresh.addEventListener("click", () => {
@@ -301,6 +293,17 @@ elements.refresh.addEventListener("click", () => {
 
 elements.browseRss.addEventListener("click", () => {
   browseRss().catch((error) => showToast(error.message, true));
+});
+
+elements.mediaDialog.addEventListener("click", (event) => {
+  if (event.target === elements.mediaDialog || event.target === elements.cancelMedia) {
+    closeMediaDialog();
+    return;
+  }
+
+  const button = event.target.closest("[data-media-choice]");
+  if (!button) return;
+  addTorrentWithMedia(button.dataset.mediaChoice).catch((error) => showToast(error.message, true));
 });
 
 elements.scanMovie.addEventListener("click", () => scan("movie").catch((error) => showToast(error.message, true)));

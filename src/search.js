@@ -15,7 +15,7 @@ function normalizeInternetArchiveItem(item, mediaType) {
     id: `ia:${identifier}`,
     title,
     source: "Internet Archive",
-    mediaType,
+    mediaType: mediaType || "",
     seeders: null,
     size: null,
     url: `https://archive.org/download/${encodeURIComponent(identifier)}/${encodeURIComponent(identifier)}_archive.torrent`,
@@ -25,9 +25,8 @@ function normalizeInternetArchiveItem(item, mediaType) {
 }
 
 async function searchInternetArchive(query, mediaType) {
-  const mediaFilter = mediaType === "tv" ? "mediatype:movies" : "mediatype:movies";
   const params = new URLSearchParams({
-    q: `${query} AND ${mediaFilter}`,
+    q: `${query} AND mediatype:movies`,
     fl: "identifier,title",
     rows: "12",
     page: "1",
@@ -117,7 +116,7 @@ function normalizeRssItem(item, sourceUrl, mediaType, index) {
     id: `rss:${url.hostname}:${index}:${item.guid?.["#text"] || item.id || item.link || item.title}`,
     title: compact(item.title, "Untitled"),
     source: url.hostname,
-    mediaType,
+    mediaType: mediaType || "",
     seeders: Number(attrValue(item["torznab:attr"], "seeders") || 0),
     size: Number(item.size || item.enclosure?.["@_length"] || 0),
     url: torrentUrl || linkValue(item.link),
@@ -146,7 +145,7 @@ async function searchTorznab(sourceUrl, query, mediaType) {
     id: `torznab:${url.hostname}:${index}:${item.guid?.["#text"] || item.link || item.title}`,
     title: compact(item.title, "Untitled"),
     source: url.hostname,
-    mediaType,
+    mediaType: mediaType || "",
     seeders: Number(attrValue(item["torznab:attr"], "seeders") || 0),
     size: Number(item.size || 0),
     url: compact(item.link),
