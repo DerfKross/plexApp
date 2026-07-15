@@ -1,5 +1,5 @@
 const state = {
-  mediaType: "movie",
+  mediaType: "",
   results: [],
   rssItems: []
 };
@@ -23,6 +23,14 @@ const elements = {
 
 function selectedMediaType() {
   return new FormData(elements.form).get("mediaType");
+}
+
+function requireSelectedMediaType() {
+  const mediaType = selectedMediaType();
+  if (!["movie", "tv"].includes(mediaType)) {
+    throw new Error("Choose Movie or TV Show first.");
+  }
+  return mediaType;
 }
 
 function showToast(message, isError = false) {
@@ -188,7 +196,7 @@ function escapeAttribute(value) {
 }
 
 async function search() {
-  const mediaType = selectedMediaType();
+  const mediaType = requireSelectedMediaType();
   const query = elements.query.value.trim();
   if (!query) return;
 
@@ -202,7 +210,7 @@ async function search() {
 }
 
 async function browseRss() {
-  const mediaType = selectedMediaType();
+  const mediaType = requireSelectedMediaType();
   elements.results.className = "list empty";
   elements.results.textContent = "Loading RSS feed items...";
   const data = await api(`/api/rss?mediaType=${encodeURIComponent(mediaType)}`);
@@ -213,6 +221,9 @@ async function browseRss() {
 }
 
 async function addResult(index) {
+  if (!["movie", "tv"].includes(state.mediaType)) {
+    state.mediaType = requireSelectedMediaType();
+  }
   const result = state.results[index];
   await api("/api/torrents", {
     method: "POST",
@@ -230,11 +241,12 @@ async function addDirectUrl() {
   const value = elements.direct.value.trim();
   if (!value) return;
   const isMagnet = value.startsWith("magnet:");
+  const mediaType = requireSelectedMediaType();
 
   await api("/api/torrents", {
     method: "POST",
     body: JSON.stringify({
-      mediaType: selectedMediaType(),
+      mediaType,
       torrentUrl: isMagnet ? "" : value,
       magnetUrl: isMagnet ? value : ""
     })
@@ -271,6 +283,16 @@ elements.results.addEventListener("click", (event) => {
   const button = event.target.closest("[data-add]");
   if (!button) return;
   addResult(Number(button.dataset.add)).catch((error) => showToast(error.message, true));
+});
+
+elements.form.addEventListener("change", (event) => {
+  if (event.target.name !== "mediaType") return;
+  state.mediaType = event.target.value;
+  state.results = [];
+  state.rssItems = [];
+  elements.sourceStatus.textContent = "";
+  elements.results.className = "list empty";
+  elements.results.textContent = "Run a search or browse RSS.";
 });
 
 elements.refresh.addEventListener("click", () => {
