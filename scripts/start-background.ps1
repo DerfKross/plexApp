@@ -6,7 +6,8 @@ if (-not (Test-Path ".env")) {
 }
 
 $logDir = Join-Path (Get-Location) "logs"
-$logFile = Join-Path $logDir "plexapp.log"
+$outLogFile = Join-Path $logDir "plexapp.out.log"
+$errLogFile = Join-Path $logDir "plexapp.err.log"
 
 if (-not (Test-Path $logDir)) {
   New-Item -ItemType Directory -Path $logDir | Out-Null
@@ -24,8 +25,8 @@ Start-Process `
   -FilePath "npm.cmd" `
   -ArgumentList "start" `
   -WorkingDirectory (Get-Location) `
-  -RedirectStandardOutput $logFile `
-  -RedirectStandardError $logFile `
+  -RedirectStandardOutput $outLogFile `
+  -RedirectStandardError $errLogFile `
   -WindowStyle Hidden
 
 Start-Sleep -Seconds 3
@@ -35,11 +36,21 @@ if ($listener) {
   Write-Host "PlexApp is running."
   Write-Host "Local URL: http://localhost:3747"
   Write-Host "Home network URL: http://192.168.1.131:3747"
-  Write-Host "Log file: $logFile"
+  Write-Host "Output log file: $outLogFile"
+  Write-Host "Error log file: $errLogFile"
 } else {
   Write-Host "PlexApp did not start listening on port 3747."
-  Write-Host "Check the log file: $logFile"
-  if (Test-Path $logFile) {
-    Get-Content $logFile -Tail 40
+  Write-Host "Check the log files:"
+  Write-Host $outLogFile
+  Write-Host $errLogFile
+  if (Test-Path $outLogFile) {
+    Write-Host ""
+    Write-Host "Last output log lines:"
+    Get-Content $outLogFile -Tail 40
+  }
+  if (Test-Path $errLogFile) {
+    Write-Host ""
+    Write-Host "Last error log lines:"
+    Get-Content $errLogFile -Tail 40
   }
 }
