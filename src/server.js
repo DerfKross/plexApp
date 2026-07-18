@@ -2,7 +2,7 @@ import express from "express";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { config } from "./config.js";
-import { completedTorrentsMissingFrom, rememberCompletedTorrents } from "./download-history.js";
+import { clearCompletedHistory, completedTorrentsMissingFrom, rememberCompletedTorrents } from "./download-history.js";
 import { ensureTvSeasonFolder, listSeasonFolders, listTvFolders } from "./media-folders.js";
 import { addTorrent, listTorrents } from "./qbittorrent.js";
 import { scanPlex } from "./plex.js";
@@ -124,6 +124,13 @@ app.get(
     await rememberCompletedTorrents(activeTorrents);
     const completedTorrents = await completedTorrentsMissingFrom(activeTorrents);
     response.json({ torrents: [...activeTorrents, ...completedTorrents] });
+  })
+);
+
+app.delete(
+  "/api/torrents/completed",
+  asyncRoute(async (request, response) => {
+    response.json(await clearCompletedHistory());
   })
 );
 

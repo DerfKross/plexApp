@@ -169,6 +169,8 @@ To check whether the web GUI is running:
 .\scripts\status-windows.ps1
 ```
 
+Completed download history is kept for 24 hours after completion, then removed automatically. Use **Clear Done** in the Downloads panel to clear remembered completed items immediately.
+
 ## Notes
 
 - Internet Archive search is enabled by default for legal public-domain/open-media torrents.

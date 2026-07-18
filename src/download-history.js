@@ -3,6 +3,7 @@ import path from "node:path";
 
 const dataDir = path.resolve("data");
 const historyPath = path.join(dataDir, "download-history.json");
+const completedRetentionMs = 24 * 60 * 60 * 1000;
 
 async function readHistory() {
   try {
@@ -30,7 +31,7 @@ export async function rememberCompletedTorrents(torrents) {
     return;
   }
 
-  const history = await readHistory();
+  const history = pruneHistory(await readHistory());
   const byHash = new Map(history.completed.map((torrent) => [torrent.hash, torrent]));
 
   for (const torrent of completedNow) {
@@ -54,7 +55,23 @@ export async function rememberCompletedTorrents(torrents) {
 }
 
 export async function completedTorrentsMissingFrom(activeTorrents) {
-  const history = await readHistory();
+  const history = pruneHistory(await readHistory());
+  await writeHistory(history);
   const activeHashes = new Set(activeTorrents.map((torrent) => torrent.hash));
   return history.completed.filter((torrent) => !activeHashes.has(torrent.hash));
+}
+
+export async function clearCompletedHistory() {
+  await writeHistory({ completed: [] });
+  return { ok: true };
+}
+
+function pruneHistory(history) {
+  const cutoff = Date.now() - completedRetentionMs;
+  return {
+    completed: history.completed.filter((torrent) => {
+      const completedAt = Date.parse(torrent.completedAt || "");
+      return Number.isFinite(completedAt) && completedAt >= cutoff;
+    })
+  };
 }

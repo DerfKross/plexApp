@@ -28,6 +28,7 @@ const elements = {
   confirmTvFolder: $("#confirmTvFolderButton"),
   backMedia: $("#backMediaButton"),
   cancelMedia: $("#cancelMediaButton"),
+  clearDone: $("#clearDoneButton"),
   scanMovie: $("#scanMovieButton"),
   scanTv: $("#scanTvButton")
 };
@@ -363,6 +364,12 @@ async function scan(mediaType) {
   showToast("Plex library scan started.");
 }
 
+async function clearDone() {
+  await api("/api/torrents/completed", { method: "DELETE" });
+  showToast("Completed download history cleared.");
+  await refreshDownloads();
+}
+
 elements.form.addEventListener("submit", (event) => {
   event.preventDefault();
   search().catch((error) => showToast(error.message, true));
@@ -420,6 +427,7 @@ elements.mediaDialog.addEventListener("click", (event) => {
 
 elements.scanMovie.addEventListener("click", () => scan("movie").catch((error) => showToast(error.message, true)));
 elements.scanTv.addEventListener("click", () => scan("tv").catch((error) => showToast(error.message, true)));
+elements.clearDone.addEventListener("click", () => clearDone().catch((error) => showToast(error.message, true)));
 
 elements.tvFolderSelect.addEventListener("change", () => {
   if (elements.tvFolderSelect.value) {
