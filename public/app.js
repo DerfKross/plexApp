@@ -11,6 +11,8 @@ const elements = {
   directForm: $("#directForm"),
   query: $("#queryInput"),
   direct: $("#directInput"),
+  searchRow: $(".search-row"),
+  searchDockPlaceholder: $("#searchDockPlaceholder"),
   results: $("#resultsList"),
   downloads: $("#downloadsList"),
   activeTray: $("#activeDownloadTray"),
@@ -39,6 +41,15 @@ function showToast(message, isError = false) {
   elements.toast.classList.toggle("error", isError);
   elements.toast.classList.add("visible");
   window.setTimeout(() => elements.toast.classList.remove("visible"), 3600);
+}
+
+function syncSearchDock() {
+  if (!elements.searchRow || !elements.searchDockPlaceholder) return;
+
+  const shouldDock = elements.searchDockPlaceholder.getBoundingClientRect().top <= 0;
+  elements.searchRow.classList.toggle("docked", shouldDock);
+  elements.searchDockPlaceholder.classList.toggle("active", shouldDock);
+  elements.searchDockPlaceholder.style.height = shouldDock ? `${elements.searchRow.offsetHeight}px` : "0";
 }
 
 async function api(path, options = {}) {
@@ -510,3 +521,6 @@ api("/api/config")
   .then((config) => renderRssSourceButtons(config.rssSources || []))
   .catch(() => {});
 window.setInterval(() => refreshDownloads().catch(() => {}), 5000);
+window.addEventListener("scroll", syncSearchDock, { passive: true });
+window.addEventListener("resize", syncSearchDock);
+syncSearchDock();
