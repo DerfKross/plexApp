@@ -31,6 +31,8 @@ export const config = {
     torznab: splitCsv(process.env.TORZNAB_SOURCES),
     rss: splitCsv(process.env.TORRENT_RSS_SOURCES),
     rssLabels: splitCsv(process.env.TORRENT_RSS_LABELS),
+    rssSearch: splitCsv(process.env.TORRENT_RSS_SEARCH_SOURCES),
+    rssSearchLabels: splitCsv(process.env.TORRENT_RSS_SEARCH_LABELS),
     rssItemsPerFeed: Number(process.env.RSS_ITEMS_PER_FEED || 100),
     allowDirectTorrentUrls: process.env.ALLOW_DIRECT_TORRENT_URLS !== "false"
   }

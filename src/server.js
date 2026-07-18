@@ -40,6 +40,18 @@ app.get("/api/config", (request, response) => {
       index,
       label: config.sources.rssLabels[index] || new URL(source).hostname
     })),
+    rssSearchSources: config.sources.rssSearch.map((source, index) => {
+      const sampleUrl = source
+        .replaceAll("{query}", "search")
+        .replaceAll("{keyword}", "search")
+        .replaceAll("{rawQuery}", "search")
+        .replaceAll("{rawKeyword}", "search");
+
+      return {
+        index,
+        label: config.sources.rssSearchLabels[index] || new URL(sampleUrl).hostname
+      };
+    }),
     rssItemsPerFeed: config.sources.rssItemsPerFeed,
     hasPlexToken: Boolean(config.plex.token)
   });

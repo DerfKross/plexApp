@@ -234,6 +234,25 @@ async function searchRssSource(sourceUrl, query, mediaType) {
     .filter((item) => item.url || item.magnet);
 }
 
+function rssSearchUrl(sourceUrl, query) {
+  const encoded = encodeURIComponent(query);
+  return sourceUrl
+    .replaceAll("{query}", encoded)
+    .replaceAll("{keyword}", encoded)
+    .replaceAll("{rawQuery}", query)
+    .replaceAll("{rawKeyword}", query);
+}
+
+async function searchRssTemplateSource(sourceUrl, query, mediaType) {
+  const resolvedUrl = rssSearchUrl(sourceUrl, query);
+  const items = await readRssItems(resolvedUrl);
+
+  return items
+    .slice(0, 25)
+    .map((item, index) => normalizeRssItem(item, resolvedUrl, mediaType, index))
+    .filter((item) => item.url || item.magnet);
+}
+
 async function readRssItems(sourceUrl) {
   const url = new URL(sourceUrl);
   const response = await fetch(url);
@@ -279,7 +298,8 @@ export async function searchTorrents({ query, mediaType }) {
   const searches = [
     ...(config.sources.internetArchive ? [searchInternetArchive(cleanedQuery, mediaType)] : []),
     ...config.sources.torznab.map((source) => searchTorznab(source, cleanedQuery, mediaType)),
-    ...config.sources.rss.map((source) => searchRssSource(source, cleanedQuery, mediaType))
+    ...config.sources.rss.map((source) => searchRssSource(source, cleanedQuery, mediaType)),
+    ...config.sources.rssSearch.map((source) => searchRssTemplateSource(source, cleanedQuery, mediaType))
   ];
 
   const settled = await Promise.allSettled(searches);
