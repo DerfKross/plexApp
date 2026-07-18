@@ -13,6 +13,7 @@ const elements = {
   direct: $("#directInput"),
   results: $("#resultsList"),
   downloads: $("#downloadsList"),
+  activeTray: $("#activeDownloadTray"),
   toast: $("#toast"),
   sourceStatus: $("#sourceStatus"),
   rssSourceButtons: $("#rssSourceButtons"),
@@ -89,6 +90,14 @@ function sizeBadge(item) {
     return `<span class="size-badge unknown">Unknown size</span>`;
   }
   return `<span class="size-badge ${sizeClass(item.size)}">${formatBytes(item.size)}</span>`;
+}
+
+function torrentPercent(torrent) {
+  return Math.round((torrent.progress || 0) * 100);
+}
+
+function isTorrentDone(torrent) {
+  return torrentPercent(torrent) >= 100 || torrent.state === "done";
 }
 
 function renderRssSourceButtons(sources) {
@@ -179,6 +188,8 @@ function renderRssItems() {
 }
 
 function renderDownloads(torrents) {
+  renderActiveDownloadTray(torrents);
+
   if (!torrents.length) {
     elements.downloads.className = "list empty";
     elements.downloads.textContent = "No active downloads found.";
@@ -188,8 +199,8 @@ function renderDownloads(torrents) {
   elements.downloads.className = "list";
   elements.downloads.innerHTML = torrents
     .map((torrent) => {
-      const percent = Math.round((torrent.progress || 0) * 100);
-      const isDone = percent >= 100 || torrent.state === "done";
+      const percent = torrentPercent(torrent);
+      const isDone = isTorrentDone(torrent);
       const meta = [
         torrent.category || "uncategorized",
         isDone ? "Done" : torrent.state,
@@ -216,6 +227,45 @@ function renderDownloads(torrents) {
       `;
     })
     .join("");
+}
+
+function renderActiveDownloadTray(torrents) {
+  const active = torrents
+    .filter((torrent) => !torrent.remembered && !isTorrentDone(torrent))
+    .sort((a, b) => (b.addedOn || 0) - (a.addedOn || 0));
+
+  if (!active.length) {
+    elements.activeTray.classList.add("hidden");
+    elements.activeTray.innerHTML = "";
+    return;
+  }
+
+  const torrent = active[0];
+  const percent = torrentPercent(torrent);
+  const meta = [
+    torrent.category || "uncategorized",
+    torrent.state,
+    `${percent}%`,
+    torrent.dlspeed ? `${formatBytes(torrent.dlspeed)}/s` : ""
+  ]
+    .filter(Boolean)
+    .map((value) => escapeHtml(value))
+    .join(" - ");
+
+  elements.activeTray.innerHTML = `
+    <div class="active-download-content">
+      <div>
+        <div class="active-download-label">Downloading now</div>
+        <div class="active-download-title">${escapeHtml(torrent.name)}</div>
+        <div class="active-download-meta">${meta}</div>
+      </div>
+      <div class="active-download-percent">${percent}%</div>
+    </div>
+    <div class="progress-track" aria-label="${percent}% complete">
+      <div class="progress-bar" style="width: ${percent}%"></div>
+    </div>
+  `;
+  elements.activeTray.classList.remove("hidden");
 }
 
 function escapeHtml(value) {

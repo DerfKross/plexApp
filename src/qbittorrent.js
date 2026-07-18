@@ -91,6 +91,7 @@ export async function listTorrents() {
     downloaded: torrent.downloaded,
     dlspeed: torrent.dlspeed,
     eta: torrent.eta,
+    addedOn: torrent.added_on || 0,
     savePath: torrent.save_path
   }));
 }
