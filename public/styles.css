@@ -113,7 +113,10 @@ h2 {
   padding-top: 0;
 }
 
-.search-form,
+.search-form {
+  display: contents;
+}
+
 .direct-form {
   display: grid;
   gap: 12px;
@@ -124,14 +127,6 @@ h2 {
   gap: 10px;
 }
 
-.search-dock-placeholder {
-  display: none;
-}
-
-.search-dock-placeholder.active {
-  display: block;
-}
-
 .search-row,
 .direct-form {
   display: grid;
@@ -140,19 +135,13 @@ h2 {
 }
 
 .search-row {
+  position: sticky;
+  top: 0;
   z-index: 8;
   padding: 10px 0;
   background: rgba(18, 21, 23, 0.96);
   backdrop-filter: blur(12px);
-}
-
-.search-row.docked {
-  position: fixed;
-  top: 0;
-  left: 50%;
-  width: min(1180px, calc(100vw - 28px));
   box-shadow: 0 10px 26px rgba(0, 0, 0, 0.26);
-  transform: translateX(-50%);
 }
 
 .feed-actions {
@@ -569,10 +558,6 @@ h2 {
     gap: 8px;
     margin-inline: -8px;
     padding: 8px;
-  }
-
-  .search-row.docked {
-    width: calc(100vw - 16px);
   }
 
   .feed-actions button {

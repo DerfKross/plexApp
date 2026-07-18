@@ -18,20 +18,20 @@
         </button>
       </header>
 
+      <form id="searchForm" class="search-form">
+        <div class="search-row">
+          <input id="queryInput" type="search" placeholder="Search title" autocomplete="off" />
+          <button type="submit">Search</button>
+        </div>
+      </form>
+
       <section class="control-band">
-        <form id="searchForm" class="search-form">
-          <div class="sticky-search">
-            <div id="searchDockPlaceholder" class="search-dock-placeholder" aria-hidden="true"></div>
-            <div class="search-row">
-              <input id="queryInput" type="search" placeholder="Search title" autocomplete="off" />
-              <button type="submit">Search</button>
-            </div>
-            <div class="feed-actions">
-              <button id="browseRssButton" type="button">Browse RSS</button>
-            </div>
-            <div id="rssSourceButtons" class="source-buttons hidden" aria-label="RSS feeds"></div>
+        <div class="sticky-search">
+          <div class="feed-actions">
+            <button id="browseRssButton" type="button">Browse RSS</button>
           </div>
-        </form>
+          <div id="rssSourceButtons" class="source-buttons hidden" aria-label="RSS feeds"></div>
+        </div>
       </section>
 
       <section class="manual-band">
