@@ -100,6 +100,12 @@ function isTorrentDone(torrent) {
   return torrentPercent(torrent) >= 100 || torrent.state === "done";
 }
 
+function newestTorrent(torrents) {
+  return torrents
+    .filter((torrent) => !torrent.remembered)
+    .sort((a, b) => (b.addedOn || 0) - (a.addedOn || 0))[0];
+}
+
 function renderRssSourceButtons(sources) {
   if (!sources.length) {
     elements.rssSourceButtons.classList.add("hidden");
@@ -230,17 +236,14 @@ function renderDownloads(torrents) {
 }
 
 function renderActiveDownloadTray(torrents) {
-  const active = torrents
-    .filter((torrent) => !torrent.remembered && !isTorrentDone(torrent))
-    .sort((a, b) => (b.addedOn || 0) - (a.addedOn || 0));
+  const torrent = newestTorrent(torrents);
 
-  if (!active.length) {
+  if (!torrent || isTorrentDone(torrent)) {
     elements.activeTray.classList.add("hidden");
     elements.activeTray.innerHTML = "";
     return;
   }
 
-  const torrent = active[0];
   const percent = torrentPercent(torrent);
   const meta = [
     torrent.category || "uncategorized",
