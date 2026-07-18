@@ -20,14 +20,16 @@
 
       <section class="control-band">
         <form id="searchForm" class="search-form">
-          <div class="search-row">
-            <input id="queryInput" type="search" placeholder="Search title" autocomplete="off" />
-            <button type="submit">Search</button>
+          <div class="sticky-search">
+            <div class="search-row">
+              <input id="queryInput" type="search" placeholder="Search title" autocomplete="off" />
+              <button type="submit">Search</button>
+            </div>
+            <div class="feed-actions">
+              <button id="browseRssButton" type="button">Browse RSS</button>
+            </div>
+            <div id="rssSourceButtons" class="source-buttons hidden" aria-label="RSS feeds"></div>
           </div>
-          <div class="feed-actions">
-            <button id="browseRssButton" type="button">Browse RSS</button>
-          </div>
-          <div id="rssSourceButtons" class="source-buttons hidden" aria-label="RSS feeds"></div>
         </form>
       </section>
 
