@@ -47,13 +47,28 @@ function toArray(value) {
   return Array.isArray(value) ? value : [value];
 }
 
-function queryMatches(title, query) {
-  const normalizedTitle = title.toLowerCase();
-  return query
+function searchableText(value) {
+  return compact(value)
     .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function queryMatches(title, query) {
+  const normalizedTitle = searchableText(title);
+  return searchableText(query)
     .split(/\s+/)
     .filter(Boolean)
     .every((term) => normalizedTitle.includes(term));
+}
+
+function isPlaceholderResult(title) {
+  return /\(0{4}\)/.test(title);
+}
+
+function isSearchResultMatch(item, query) {
+  const title = compact(item.title);
+  return queryMatches(title, query) && !isPlaceholderResult(title);
 }
 
 function attrValue(attributes, name) {
@@ -228,7 +243,7 @@ async function searchRssSource(sourceUrl, query, mediaType) {
   const items = await readRssItems(sourceUrl);
 
   return items
-    .filter((item) => queryMatches(compact(item.title), query))
+    .filter((item) => isSearchResultMatch(item, query))
     .slice(0, 25)
     .map((item, index) => normalizeRssItem(item, sourceUrl, mediaType, index))
     .filter((item) => item.url || item.magnet);
@@ -248,6 +263,7 @@ async function searchRssTemplateSource(sourceUrl, query, mediaType) {
   const items = await readRssItems(resolvedUrl);
 
   return items
+    .filter((item) => isSearchResultMatch(item, query))
     .slice(0, 25)
     .map((item, index) => normalizeRssItem(item, resolvedUrl, mediaType, index))
     .filter((item) => item.url || item.magnet);
